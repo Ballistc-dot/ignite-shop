@@ -23,6 +23,7 @@ export const Close = styled(Dialog.Close, {
   right: 24,
   top: 24,
   position: 'fixed',
+  cursor: 'pointer',
 })
 
 export const CartItemsContainer = styled('div', {
@@ -53,6 +54,10 @@ export const CartFooter = styled('div', {
     color: '$white',
     fontSize: 18,
     fontWeight: 'bold',
+    cursor: 'pointer',
+    '&:hover': {
+      backgroundColor: '$green300',
+    },
   },
 })
 export const CartFooterContent = styled('div', {

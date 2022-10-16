@@ -1,8 +1,6 @@
-import axios from 'axios'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import Image from 'next/future/image'
 import Head from 'next/head'
-import { useState } from 'react'
 import Stripe from 'stripe'
 import { stripe } from '../../lib/stripe'
 import {
@@ -29,10 +27,17 @@ export default function Product({ product }: ProductProps) {
   // const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] =
   // useState(false)
 
-  const { addItem } = useShoppingCart()
+  const { addItem, cartDetails } = useShoppingCart()
+
+  const cart = Object.values(cartDetails)
+  const alreadyAddToCart = cart.filter((prod) => prod.id === product.sku)
 
   async function handleAddProductToCart() {
-    addItem(product)
+    if (alreadyAddToCart.length > 0) {
+      alert('você só pode adicionar um produto desse no carrinho!')
+    } else {
+      addItem(product)
+    }
   }
   const formattedPrice = formatCurrencyString({
     currency: 'brl',

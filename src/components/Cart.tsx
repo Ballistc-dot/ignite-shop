@@ -10,7 +10,9 @@ import {
   CartFooterContent,
 } from '../styles/components/cart'
 import { CartItems } from './CartItems'
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
+import { formatCurrencyString, useShoppingCart } from 'use-shopping-cart'
+import axios from 'axios'
 
 interface ICart {
   isOpen: boolean
@@ -18,9 +20,40 @@ interface ICart {
 }
 
 export function Cart({ setOpen, isOpen }: ICart) {
+  const { cartDetails, cartCount, totalPrice } = useShoppingCart()
+  const [IsCreatingCheckoutSession, setIsCreatingCheckoutSession] =
+    useState(false)
+
+  const cart = Object.values(cartDetails)
+  async function handleBuyButton() {
+    try {
+      setIsCreatingCheckoutSession(true)
+      const products = cart.map((prod) => {
+        return {
+          price: prod.defaultPriceId,
+          quantity: prod.quantity,
+        }
+      })
+
+      const response = await axios.post('/api/checkout', {
+        products,
+      })
+
+      const { checkoutUrl } = response.data
+
+      window.location.href = checkoutUrl
+    } catch (err) {
+      setIsCreatingCheckoutSession(false)
+
+      alert('Falha ao redirecionar ao checkout!')
+    }
+  }
+  const formattedTotal = formatCurrencyString({
+    currency: 'brl',
+    value: totalPrice,
+  })
   return (
     <Dialog.Root open={isOpen} onOpenChange={setOpen}>
-      <Dialog.Trigger />
       <Dialog.Portal>
         <CartContainer>
           <Close>
@@ -29,9 +62,15 @@ export function Cart({ setOpen, isOpen }: ICart) {
           <CartTitle>Sacola de compras</CartTitle>
           <CartItemsContainer>
             <CartItemsContent>
-              <CartItems />
-              <CartItems />
-              <CartItems />
+              {cart.map((prod) => (
+                <CartItems
+                  key={prod.defaultPriceId}
+                  id={prod.id}
+                  name={prod.name}
+                  imageUrl={prod.imageUrl}
+                  price={prod.price}
+                />
+              ))}
             </CartItemsContent>
             <CartFooter>
               <CartFooterContent>
@@ -40,7 +79,7 @@ export function Cart({ setOpen, isOpen }: ICart) {
                     Quantidade
                   </span>
                   <span style={{ color: '#C4C4CC', fontSize: 18 }}>
-                    1 itens
+                    {cartCount} itens
                   </span>
                 </div>
                 <div>
@@ -60,11 +99,16 @@ export function Cart({ setOpen, isOpen }: ICart) {
                       fontWeight: 'bold',
                     }}
                   >
-                    R$ 240,90
+                    {formattedTotal}
                   </span>
                 </div>
               </CartFooterContent>
-              <button>Finalizar compra</button>
+              <button
+                disabled={IsCreatingCheckoutSession}
+                onClick={handleBuyButton}
+              >
+                Finalizar compra
+              </button>
             </CartFooter>
           </CartItemsContainer>
         </CartContainer>
